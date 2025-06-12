@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCO Guide Interactive Flashcards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .flashcard-container {
+            perspective: 1000px;
+            margin: 20px auto;
+            width: 100%;
+            max-width: 600px;
+            height: 350px;
+        }
+
+        .flashcard {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: 3px solid #4a5568;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            transform: rotateY(180deg);
+            border: 3px solid #742a2a;
+        }
+
+        .navigation {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .nav-btn:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .counter {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .instruction {
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .flashcard-container {
+                height: 300px;
+            }
+            
+            .card-face {
+                font-size: 1rem;
+                padding: 20px;
+            }
+            
+            .navigation {
+                gap: 15px;
+            }
+            
+            .nav-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎖️ NCO Guide Flashcards</h1>
+        <p class="instruction">Click on the flashcard to reveal the answer</p>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="flashcard-container">
+            <div class="flashcard" id="flashcard" onclick="flipCard()">
+                <div class="card-face card-front" id="cardFront">
+                    Loading...
+                </div>
+                <div class="card-face card-back" id="cardBack">
+                    Loading...
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn" onclick="previousCard()">← Previous</button>
+            <div class="counter">
+                <span id="currentCard">1</span> / <span id="totalCards">20</span>
+            </div>
+            <button class="nav-btn" id="nextBtn" onclick="nextCard()">Next →</button>
+        </div>
+    </div>
+
+    <script>
+        const flashcards = [
+            {
+                question: "What are the six NCO Common Core Competencies (NCO C³)?",
+                answer: "1. Readiness<br>2. Leadership<br>3. Training Management<br>4. Communication<br>5. Operations<br>6. Program Management"
+            },
+            {
+                question: "What is Mission Command?",
+                answer: "The Army's approach to command and control that empowers subordinate decision making and decentralized execution appropriate to the situation."
+            },
+            {
+                question: "What is the role of the Sergeant Major of the Army (SMA)?",
+                answer: "The senior enlisted position of the Army, serving as the senior enlisted adviser to the Secretary of the Army and Chief of Staff. Appointed to serve as the voice of the NCO corps to address enlisted Soldier issues."
+            },
+            {
+                question: "What are the key components of the Readiness competency?",
+                answer: "Inspections, comprehensive Soldier fitness (physical, spiritual, emotional, social, family), equipment maintenance, SFL-TAP, resiliency, MEDPROS, and financial readiness."
+            },
+            {
+                question: "What is the 8-Step Training Model?",
+                answer: "A systematic approach NCOs use to plan, prepare, execute, and assess sustained and effective training from squad to brigade level."
+            },
+            {
+                question: "What is the primary role of a First Sergeant (1SG)?",
+                answer: "Senior enlisted advisor to Commander at Company/Troop/Battery level. Responsible for maintaining standards, ensuring training objectives are met, developing Soldiers, and ensuring health, welfare, and morale."
+            },
+            {
+                question: "What does SFL-TAP stand for?",
+                answer: "Soldier for Life-Transition Assistance Program - a program that helps Soldiers transition from military to civilian life."
+            },
+            {
+                question: "What are the main components of the Leadership competency?",
+                answer: "Servant leadership, counseling, coaching, mentoring, Army ethic, Army values, character development, leadership requirements model, critical thinking, and problem solving."
+            },
+            {
+                question: "What is the role of a Command Sergeant Major (CSM)?",
+                answer: "Senior NCO at battalion and higher levels. Principal advisor to commander, carries out and enforces policies and standards, responsible for enlisted talent management and ensuring all aspects of NCO C³ are present."
+            },
+            {
+                question: "What are Troop Leading Procedures (TLP)?",
+                answer: "A systematic approach used in Operations competency that includes planning, preparation, execution, and assessment of military operations at the tactical level."
+            },
+            {
+                question: "What is MEDPROS?",
+                answer: "Medical Protection System - a system that tracks Soldier medical readiness including immunizations, dental readiness, and medical deployability status."
+            },
+            {
+                question: "What is the primary responsibility of a Staff Sergeant (SSG)?",
+                answer: "Leads squads and sections, serves as critical link in NCO support channel, first line supervisor who lives and works with Soldiers daily, enforces standards and develops Soldiers in MOS skills."
+            },
+            {
+                question: "What does METL stand for and what is its purpose?",
+                answer: "Mission Essential Task List - defines the unit's wartime mission and the collective tasks the unit must perform to accomplish that mission."
+            },
+            {
+                question: "What is the difference between a Sergeant Major (SGM) and Command Sergeant Major (CSM)?",
+                answer: "SGM is a key enlisted staff member with limited direct leadership influence, often serving as subject matter expert. CSM is the senior NCO in command with direct leadership responsibilities and serves as principal advisor to the commander."
+            },
+            {
+                question: "What are the key elements of the Communication competency?",
+                answer: "Verbal (public speaking & military briefings), written (English and Grammar), active listening, facilitation, negotiations, social media, digital communications, and media engagement."
+            },
+            {
+                question: "What is the role of a Sergeant First Class (SFC) as Platoon Sergeant?",
+                answer: "Senior NCO at platoon level, primary advisor to Platoon Leader, responsible for continued professional development and mentoring of Platoon Leader, has input into unit's METL."
+            },
+            {
+                question: "What does ALMS stand for?",
+                answer: "Army Learning Management Systems - part of Program Management competency that NCOs use to manage and track Soldier training and education."
+            },
+            {
+                question: "What is the historical significance of the Corporal rank?",
+                answer: "Established in 1775 with the birth of the Army and NCO corps. Along with Sergeant, it's the only rank that has never disappeared from the NCO corps. Corporals are the base of NCO ranks and the beginning of the NCO corps."
+            },
+            {
+                question: "What does IPPS-A stand for?",
+                answer: "Integrated Personnel and Pay System-Army - a comprehensive system that manages Soldier personnel records, pay, and benefits as part of Program Management competency."
+            },
+            {
+                question: "According to CSM James A. Johnson, what must Sergeants do?",
+                answer: "\"Sergeants must inspire Soldiers to be more than they ever thought they could be.\" This quote emphasizes the NCO's role in developing and motivating Soldiers to reach their full potential."
+            }
+        ];
+
+        let currentCardIndex = 0;
+        let isFlipped = false;
+
+        function loadCard() {
+            const card = flashcards[currentCardIndex];
+            document.getElementById('cardFront').innerHTML = card.question;
+            document.getElementById('cardBack').innerHTML = card.answer;
+            document.getElementById('currentCard').textContent = currentCardIndex + 1;
+            document.getElementById('totalCards').textContent = flashcards.length;
+            
+            // Update progress bar
+            const progress = ((currentCardIndex + 1) / flashcards.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentCardIndex === 0;
+            document.getElementById('nextBtn').disabled = currentCardIndex === flashcards.length - 1;
+            
+            // Reset flip state
+            if (isFlipped) {
+                document.getElementById('flashcard').classList.remove('flipped');
+                isFlipped = false;
+            }
+        }
+
+        function flipCard() {
+            const flashcard = document.getElementById('flashcard');
+            flashcard.classList.toggle('flipped');
+            isFlipped = !isFlipped;
+        }
+
+        function nextCard() {
+            if (currentCardIndex < flashcards.length - 1) {
+                currentCardIndex++;
+                loadCard();
+            }
+        }
+
+        function previousCard() {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                loadCard();
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            switch(e.key) {
+                case 'ArrowLeft':
+                    previousCard();
+                    break;
+                case 'ArrowRight':
+                    nextCard();
+                    break;
+                case ' ':
+                case 'Enter':
+                    e.preventDefault();
+                    flipCard();
+                    break;
+            }
+        });
+
+        // Initialize
+        loadCard();
+    </script>
+</body>
+</html>
